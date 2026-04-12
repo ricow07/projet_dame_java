@@ -1,12 +1,12 @@
-import java.awt.*;
 import javax.swing.*;
+import java.awt.*;
 
 public class Jeu extends JFrame {
     private HistoriquePanel historique;
     private Plateau plateau;
 
     public Jeu() {
-        setTitle("Jeu de Dames Officiel - MVC");
+        setTitle("Jeu de Dames Officiel");
         setSize(1100, 850);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
