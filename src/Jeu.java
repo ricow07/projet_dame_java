@@ -1,5 +1,5 @@
-import javax.swing.*;
 import java.awt.*;
+import javax.swing.*;
 
 public class Jeu extends JFrame {
     private HistoriquePanel historique;
