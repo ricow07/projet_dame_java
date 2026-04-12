@@ -1,15 +1,14 @@
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import javax.swing.*;
 
 public class Plateau extends JPanel {
-
     private Case[][] cases = new Case[10][10];
-    private HistoriquePanel historique;
-
-    private Color tourActuel;
-    private boolean enTrainDeRafle = false;
     private Case caseSelectionnee = null;
+    private Color tourActuel = Color.WHITE;
+    private HistoriquePanel historique;
+    private boolean enTrainDeRafle = false;
 
     public Plateau(HistoriquePanel hist) {
         this.historique = hist;
@@ -24,14 +23,13 @@ public class Plateau extends JPanel {
             for (int c = 0; c < 10; c++) {
                 Color fond = (l + c) % 2 == 0 ? Color.WHITE : Color.BLACK;
                 cases[l][c] = new Case(l, c, fond);
-                Case current = cases[l][c];
-                current.addMouseListener(new MouseAdapter() {
+                cases[l][c].addMouseListener(new MouseAdapter() {
                     @Override
                     public void mousePressed(MouseEvent e) {
-                        gererClic(current);
+                        gererClic((Case) e.getSource());
                     }
                 });
-                add(current);
+                add(cases[l][c]);
             }
         }
     }
@@ -48,7 +46,6 @@ public class Plateau extends JPanel {
         }
         tourActuel = Color.WHITE;
         enTrainDeRafle = false;
-        caseSelectionnee = null;
         historique.effacer();
         historique.ajouterCoup("--- Nouvelle Partie ---");
     }
@@ -115,11 +112,11 @@ public class Plateau extends JPanel {
     private Case getCaseSautee(Case dep, Case arr) {
         int dL = arr.getLigne() - dep.getLigne();
         int dC = arr.getCol() - dep.getCol();
-
+        
         if (Math.abs(dL) == 2 && Math.abs(dC) == 2 && !dep.getPion().isDame()) {
             return cases[dep.getLigne() + dL/2][dep.getCol() + dC/2];
         }
-
+        
         if (dep.getPion().isDame() && Math.abs(dL) == Math.abs(dC)) {
             int pasL = dL > 0 ? 1 : -1;
             int pasC = dC > 0 ? 1 : -1;
@@ -127,8 +124,8 @@ public class Plateau extends JPanel {
             for (int i = 1; i < Math.abs(dL); i++) {
                 Case inter = cases[dep.getLigne() + i*pasL][dep.getCol() + i*pasC];
                 if (inter.hasPion()) {
-                    if (inter.getPion().getCouleur().equals(dep.getPion().getCouleur())) return null;
-                    if (cible != null) return null;
+                    if (inter.getPion().getCouleur().equals(dep.getPion().getCouleur())) return null; 
+                    if (cible != null) return null; 
                     cible = inter;
                 }
             }
@@ -136,7 +133,7 @@ public class Plateau extends JPanel {
         }
         return null;
     }
-
+    
     private boolean peutSauter(Case dep) {
         int[][] directions = {{-2, -2}, {-2, 2}, {2, -2}, {2, 2}};
         for (int[] dir : directions) {
@@ -146,8 +143,7 @@ public class Plateau extends JPanel {
                 Case arr = cases[arrL][arrC];
                 if (!arr.hasPion()) {
                     Case caseSautee = getCaseSautee(dep, arr);
-                    if (caseSautee != null && caseSautee.hasPion() &&
-                        !caseSautee.getPion().getCouleur().equals(dep.getPion().getCouleur())) {
+                    if (caseSautee != null && caseSautee.hasPion() && !caseSautee.getPion().getCouleur().equals(dep.getPion().getCouleur())) {
                         return true;
                     }
                 }
@@ -167,38 +163,33 @@ public class Plateau extends JPanel {
         return false;
     }
 
-    // --- VÉRIFICATION GLOBALE DU DÉPLACEMENT ---
     private boolean estDeplacementValide(Case dep, Case arr) {
         if (arr.hasPion() || arr.getBackground() == Color.WHITE) return false;
-
+        
         int dL = arr.getLigne() - dep.getLigne();
         int dC = Math.abs(arr.getCol() - dep.getCol());
-
+        
         Case sautee = getCaseSautee(dep, arr);
-        boolean estUnSaut = (sautee != null && sautee.hasPion() &&
-                !sautee.getPion().getCouleur().equals(dep.getPion().getCouleur()));
+        boolean estUnSaut = (sautee != null && sautee.hasPion() && !sautee.getPion().getCouleur().equals(dep.getPion().getCouleur()));
 
         if (unePriseEstPossible(dep.getPion().getCouleur())) {
-            return estUnSaut;
+            return estUnSaut; 
         }
 
-        if (enTrainDeRafle) return false;
+        if (enTrainDeRafle) return false; 
 
         if (!dep.getPion().isDame() && Math.abs(dL) == 1 && dC == 1) {
             if (dep.getPion().getCouleur() == Color.WHITE && dL == -1) return true;
             if (dep.getPion().getCouleur() == Color.BLACK && dL == 1) return true;
         }
-
+        
         if (dep.getPion().isDame() && Math.abs(dL) == dC) {
-            int pL = dL > 0 ? 1 : -1;
-            int pC = (arr.getCol() - dep.getCol()) > 0 ? 1 : -1;
+            int pL = dL > 0 ? 1 : -1, pC = (arr.getCol() - dep.getCol()) > 0 ? 1 : -1;
             for (int i = 1; i < Math.abs(dL); i++) {
-                if (cases[dep.getLigne() + i*pL][dep.getCol() + i*pC].hasPion())
-                    return false;
+                if (cases[dep.getLigne() + i*pL][dep.getCol() + i*pC].hasPion()) return false; 
             }
             return true;
         }
-
         return false;
     }
 
@@ -215,13 +206,9 @@ public class Plateau extends JPanel {
 
         if (blancs == 0 || noirs == 0) {
             String vainqueur = (blancs > 0) ? "LES BLANCS" : "LES NOIRS";
-            int choix = JOptionPane.showConfirmDialog(
-                    this,
-                    "Félicitations ! " + vainqueur + " ont gagné la partie !\nVoulez-vous rejouer ?",
-                    "Fin de partie",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.INFORMATION_MESSAGE
-            );
+            int choix = JOptionPane.showConfirmDialog(this, 
+                "Félicitations ! " + vainqueur + " ont gagné la partie !\nVoulez-vous rejouer ?", 
+                "Fin de partie", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
             if (choix == JOptionPane.YES_OPTION) initialiserPions();
             else System.exit(0);
         }
